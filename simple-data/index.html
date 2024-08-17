@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<head>
+<link rel="stylesheet" href="base.css">
+</head>
+<body>
+<aside>
+<div class="title">
+<h1 class="blinking-cursor">The Simple Data Stack</h1>
+</div>
+</aside>
+
+<p>The modern data stack is too complicated.</p>
+<p>This is what the modern data stack looks like in 2024.</p>
+<aside>
+<figure>
+    <img src="Vertex_modern_data_stack.png" alt="The Modern Data Stack"/>
+    <figcaption>The Modern Data Stack</figcaption>
+</figure>
+</aside>
+
+<p>Anyone who takes a look at this kafkaesque mess and thinks it looks OK is suffering from a very real case of Stockholm Syndrome. The fact that these services are cloud native does not mean they are bulletproof, sometimes quite the opposite. </p>
+<p>The frustrating thing about this image is that when you have been in the game for long enough, you <strong>understand</strong> the necessity of these tools - they do solve some very real problems <strong>at extreme scale</strong> that teams are experiencing (at the cost of adding more complexity to the system). It is unfortunate that trade-offs only suitable for the extremely large outliers with complex data needs and extreme volumes have become the gold standard for organisations everywhere. The pervasive attitude within the industry has very much become that if you aren't building for Netflix scale then you are not contributing value and making an impact.</p>
+<p>Each of these tools have their own unique modes of failure, complex dependencies and patterns of operation, making any reasoning or debugging the system a nightmare even for some of the best data engineering teams out there. The result is a decrease in engineering productivity, an increase in team burnout and an inflation of infrastructure costs that compound with time. You have just suffered <strong>the curse of complexity</strong>.</p>
+<p>As an example, say we want fault-tolerant systems which cannot afford to be down even momentarily. What do we do? We build distributed systems which can tolerate partial node failures. Now you have to contend with the fact that truth is distributed <em>around</em> the system and not necessarily held in whole within any one node. Hence, there needs to be complex consensus algorithms of which entire fields of Computer Science dedicates itself to discovering. Distributed systems also bring additional challenges such as latency and observability, to name a few. Additional technologies are invented to deal with such issues. Complexity <em>begets</em> complexity like compound interest.</p>
+<p>It becomes clear that one must be very <em>careful</em> about what one wishes from a system. The <em>genie</em> is <em>evil</em> and <em>will</em> monkey paw you for its own amusement. Sometimes, the only way to beat the game is not to play.</p>
+<h1>Be Careful What You Wish For</h1>
+<p>Data engineering at its core is simply about moving data around. Moving entails</p>
+<ul>
+<li>The physical transportation of bits from one metal box to another.</li>
+<li>The transformation of these bits to different bits in order to conform to some sets of requirements defined by the business.</li>
+</ul>
+<p>That's <strong>it</strong>. Any complexity on top should exist in service of these two objectives. Of course, moving data around is not as easy as it sounds.</p>
+<ul>
+<li>The <strong>volume</strong> of data can be large.</li>
+<li>The transformations can be <strong>complex</strong>.</li>
+<li>There may be stringent requirements on the <strong>freshness</strong> of the data.</li>
+<li>The requirements can often be <strong>unclear</strong>, ambiguous and fast-moving.</li>
+</ul>
+<p>This means our system has to</p>
+<ul>
+<li>Be relatively fast so it can deliver the bits in time.</li>
+<li>Be easy to use so we can make the easy things simple and the hard things possible.</li>
+<li>Be easy to modify and compose so we can accommodate future unknowns.</li>
+</ul>
+<p>Note that we have said nothing about availability or redundancies. Though these properties are definitely useful in any system, they are not first order priorities which directly help us move and transform bits around. If our pipeline crashes in the middle of execution, we would like to avoid dumping incorrect data into our destination. We may even like to recover at least part of the progress we have made towards achieving our goal. We would very much like to restart the pipeline (after resolving any issues) and produce the data in time. However, there generally are no hard constraints around how <em>available</em> our pipeline should be. We may even be willing to trade a bit of consistency (in many cases running an extract which did not capture the absolute latest data may be OK) for a lot of speed, especially if this speed leads to tangible savings in both time and $$$ and could be the difference between a happy stakeholder and a disgruntled one.</p>
+<p>I would argue that <strong>simplicity</strong> lies at the core of all of these objectives. Because our system is simple, it is relatively easy to reason about its behaviour. It is then relatively easy to optimise, since one can be relatively sure what goes on behind the scenes. Contrast tuning a relatively simple data processing library such as Pandas running on your local machine to trying to tuning a large, distributed spark cluster running in AWS. Often, entire teams of engineers are dedicated to tuning the Spark platform. Organisations could turn to (and they often do) products which simplify the Spark experience, whether it be AWS EMR or Databricks which provide a more <em>managed</em> experience. However, this creates lock-in and lock-in means $$$. </p>
+<blockquote>
+<p>Elon Musk famously used <a href="https://design30.substack.com/p/is-elon-musks-idiot-index-actually">The Idiot Index</a> as a measure of how badly SpaceX is being ripped off by suppliers. Take the cost of a component and divide it by the cost of the raw materials required to make that component. The higher it is, the more of an <em>idiot</em> you are. I propose the Cloud Idiot Index (CII for short) - take the cost of a cloud service and divide it by the cost of replicating said service using some combination of EC2, RDS and S3 with networking cost factored in.</p>
+</blockquote>
+<p>Wouldn't it be nice if you never had this problem in the first place?</p>
+<p>Also because our system is simple, it is inherently more composable than a larger, more complex one. Writing abstractions on top is easy. The system may not even be integration-aware but is nevertheless composable with many other tools out there. In fact, there may not even be a formal standard agreed upon between tools. Nevertheless, it is relatively trivial to glue these tools together due to their simplicity, regardless of <em>how</em> each one behaves individually.</p>
+<p>This property is more profound and useful than at face value. The ability to be blissfully unaware of how the system is being composed with external components, without these external components imposing and adding additional complexities within the system is a godsend for any data engineering team. When we want to introduce a new ML feature store which ingests data, we can simply hook the tool into our data ecosystem. We should not need to write special software to interface with our new data citizen. We should not need to mould our data into feature store specific form for it to be ingested and the feature store need not be aware of how its intake data is generated.</p>
+<p>This idea is captured beautifully in Richard P. Gabriel's 1989 essay <a href="https://www.dreamsongs.com/WorseIsBetter.html">Worse is Better</a>. A popular interpretation of the principle is that <strong>when trade-offs are required in a software system, priority should go to implementation simplicity at the expense of completeness or correctness.</strong></p>
+<p>The most famous embodiment of <strong>Worse Is Better</strong> is probably the UNIX system and philosophy.</p>
+<h1>What Is Old Is New</h1>
+<p>Let's revisit how UNIX tools are designed and communicate with each other. Every Unix command more or less reads from either a file or a Unix stream. We can even think of Unix streams as special, process-specific files. Hence, it's a good approximation to say every UNIX process is taking one set of files, running some computation on the bits and writing to another set of files (with some side effects along the way). These set of output files may then serve as the input to other commands. Each process is unaware of its upstream producers or downstream consumers and the system takes care of pesky details such as buffering. Sounds familiar? It turns out Data Engineering operates in much the same way. The patterns we need have already been invented before.</p>
+<p>This is not to say that we should do data engineering with just UNIX tools (though there are some cases where you should just use some combination of <code>awk</code>, <code>sed</code> and <code>cut</code> to do your data cleansing). That ship has long sailed. We should however, re-examine the UNIX philosophy and how this pattern could help us design better DE systems.</p>
+<p>Let's make some key assumptions now.</p>
+<ol>
+<li>Each piece of data is a file.</li>
+<li>Files shall be broadly available and consistent.</li>
+<li>A task is a collection of instructions specifying the environment, initial state, sequence of processes and end output. Given a task and necessary inputs, it should always be possible to reproduce the same output.</li>
+<li>Tasks operate on files and may optionally produce other files or side effects.</li>
+<li>Tasks may run on disparate and heterogeneous machines and therefore must communicate over the Internet.</li>
+<li>Tasks are ephemeral and should not be tied to a specific cloud instance or physical machine.</li>
+</ol>
+<p>What would our system look like?</p>
+<ol>
+<li>We would have a highly-available, consistent and redundant filesystem that is accessible over the Internet.</li>
+<li>We require an orchestrator to initiate the execution of tasks as well as monitor each task's status.</li>
+<li>Finally, we require an ephemeral source of compute, a platform which we can spin up and spin down machines with arbitrary configurations and images at will.</li>
+</ol>
+<h1>The Simple Data Stack</h1>
+<p>I propose the <strong>Simple Data Stack</strong> as an alternative to the Modern Data Stack. Let's see how we can replicate each of the functionalities of MDS with simple, boring technology.</p>
+<h3>Storage</h3>
+<p>We use <a href="https://aws.amazon.com/s3/">S3</a> as our persistent data store. Tools read from and write to S3. Access control at the object/bucket level is set up to implement data governance and security principles. We may optionally choose to write the tables as Delta tables which are parquet files along with extra metadata to enable functionalities such as Time Travel and CDC. Note that there is no lock-in, the choice of data storage format is entirely up to the data producers.</p>
+<h3>Orchestration</h3>
+<p>We use a Kubernetes cluster of <a href="https://dagster.io/">Dagster.io</a> instances is set up. Dagster kicks off and monitors jobs. <code>EcsRunLauncher</code> is used to execute tasks on Fresh EC2 instances. Dagster will even give us a nice Web UI interface to monitor for task statuses. Of course, Dagster can also log events to message queues or call webhooks on task status change.</p>
+<h3>Compute</h3>
+<p>We use <a href="https://aws.amazon.com/ec2/">EC2</a> as our compute source. Note that we are free to choose whatever compute engine we layer on top. This may be an in-process engine such as <a href="https://duckdb.org/">DuckDB</a> or a more complex solution such as <a href="https://prestodb.io/">Presto</a> or <a href="https://spark.apache.org/">Spark</a>. We may even want to opt for a hosted solution instead such as <a href="https://www.snowflake.com/en/data-cloud/platform/">Snowflake</a>, though this would be introducing a large dose of complexity back into the system. This is another strength of the <strong>Simple Data Stack</strong>, you can adopt as much or as little of the framework as you please. Since every vendor worth their salt there nowadays support querying S3, you are never out of options.</p>
+<h3>Data Modelling</h3>
+<p>We can use <a href="https://www.getdbt.com/">DBT</a> to build our data. DBT allows you to write your data models as plain old SQL code. It additionally supports running unit tests on your data as well as taking care of pesky details such as incremental refreshing and strategies for materialising data. Note that all of DBT simply runs on an EC2 instance. In fact, it could run within the same instance which hosts our compute engine. We can use reserved instances to reduce the cost of ETL even further.</p>
+<h3>BI</h3>
+<p>Again, you can hook any BI tool into the ecosystem as you please. You may want to back the BI tool with a <em>hot</em> compute cluster such as <a href="https://prestodb.io/">Presto</a> or a managed compute cluster such as <a href="https://motherduck.com/">MotherDuck</a> (check this out!!!). Some BI tools prefer directly loading the dataset into their own in-process compute engines (PowerBI I'm looking at you). Isn't it good that we already have the dataset within S3?</p>
+<h3>Data Extraction</h3>
+<p>We can use <a href="https://dlthub.com/docs/intro">dlt</a>. DLT supports loading the file directly into the parquet format ready to be ingested by downstream data processors.  Again, all of this runs on an EC2 instance with a compute engine. There is nothing more that needs to be provisioned (beyond registering the task with the orchestrator).</p>
+<h3>Data Quality</h3>
+<p>There are two types of tests in DE generally.</p>
+<h4>Unit Tests</h4>
+<p>These are pass or fail tests. Examples
+- ID uniqueness
+- Column must not be null
+- Transaction amount must not be negative
+DBT provides robust unit test support for its data models and unit tests are run as part of the build process. We can even configure DBT to call webhooks upon test failure.</p>
+<h4>Statistical Tests</h4>
+<p>These are <em>fuzzy</em> tests that look for drastic changes in the univariate and multivariate <strong>distributions</strong> of data. Does today's data look roughly the same as yesterday's? If not, something might have gone wrong during the data collection, extraction or transformation process (or something significant happened).
+There are nascent platforms such as <a href="https://www.anomalo.com/">Anomalo</a> which perform statistical testing on backend integrations such as Snowflake or Redshift.</p>
+<p>However, since we have the data stored within S3, we can use any of the excellent, mature Python libraries such as <a href="https://greatexpectations.io/gx-oss">Great Expectations</a> to achieve the same result with even more flexibility. </p>
+</body>
