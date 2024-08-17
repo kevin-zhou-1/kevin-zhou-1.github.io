@@ -84,8 +84,9 @@ p {
 }
 
 .title {
-    margin-top: 40%;
-    margin-bottom: 50%;
+    margin-top: 40vh;
+    margin-bottom: 50vh;
+    text-wrap: nowrap;
 }
 
 blockquote {
