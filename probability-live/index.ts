@@ -60,10 +60,8 @@ const starPNG = new Image()
 starPNG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAcUlEQVQ4T9VSSQ7AIAgU///mWhigsSg2MelBEk/CbEBlXc2+KWtLP2zgcIDGBSdEcDq1u8pgGwC0zu7pm4pBiSjwpNEbB+P6FKjyu9TeF4Cgw6f081yn5AGIJLkFpXvl9kuIrmh7C72lw08ZZ2F+0rBv0UYsDzyQ6qkAAAAASUVORK5CYIIA'
 let starsPos: Pos2D[] = [];
 starsPos.push({ x: getRandomInt(16, 80), y: getRandomInt(16, 80) })
-starsPos.push({ x: getRandomInt(130, 230), y: getRandomInt(16, 80) })
-starsPos.push({ x: getRandomInt(130, 230), y: getRandomInt(130, 230) })
-
-
+starsPos.push({ x: getRandomInt(130, 180), y: getRandomInt(16, 80) })
+starsPos.push({ x: getRandomInt(130, 180), y: getRandomInt(130, 180) })
 
 // Set pixel canvas size
 const titleSkySmallDims = { width: pixelWidth, height: pixelHeight };
@@ -77,6 +75,7 @@ titleSkySmall.height = titleSkySmallDims.height;
 
 titleSkyCtx.imageSmoothingEnabled = false;
 titleSkySmallCtx.imageSmoothingEnabled = false;
+titleSkySmallCtx.font = "12px DotGothic16";
 
 function drawLines(ctx: CanvasRenderingContext2D, lines: Readonly<Line2D>[]) {
     ctx.beginPath();
@@ -126,10 +125,12 @@ function updateShootingStars(shootingStars: Readonly<ShootingStar>[]): ShootingS
     const occurrences = generatePoisson(lambda);
     for (let i = 0; i < occurrences; i++) {
         const newShootingStar = {
-            pos: { x: getRandomInt(10, pixelWidth), y: getRandomInt(10, pixelHeight) },
+            pos: { x: getRandomInt(10, pixelWidth), y: getRandomInt(10, pixelHeight - 80) },
             maxLength: getRandomInt(10, 20),
             currentLength: 0
         }
+
+        // console.log(newShootingStar);
         newState.push(newShootingStar);
 
         // console.log(JSON.stringify(newShootingStar.pos));
@@ -144,8 +145,26 @@ function drawStars(ctx: CanvasRenderingContext2D, starsPos: Readonly<Pos2D>[]) {
     }
 }
 
+function getTime(frameCount: number): string {
+    let d = new Date("2024-01-01T21:00:00.000");
 
-function drawPixelArt() {
+    d.setSeconds(d.getSeconds() + frameCount)
+
+    return d.toLocaleString('en-GB', { hour: 'numeric', minute: 'numeric', hour12: true });
+}
+
+function drawTime(ctx: CanvasRenderingContext2D, frameCount: number) {
+    const time_str = getTime(frameCount);
+
+    ctx.beginPath();
+    ctx.rect(titleSkySmallDims.width - 63, titleSkySmallDims.height - 26, 57, 20);
+    ctx.stroke();
+
+    ctx.fillText(time_str, titleSkySmallDims.width - 60, titleSkySmallDims.height - 12);
+}
+
+
+function drawPixelArt(frameCount: number) {
     titleSkySmallCtx.clearRect(0, 0, titleSkySmallDims.width, titleSkySmallDims.height);
 
     titleSkySmallCtx.fillStyle = 'black';
@@ -153,6 +172,8 @@ function drawPixelArt() {
 
     drawLines(titleSkySmallCtx, shootingStarsRendered);
     drawStars(titleSkySmallCtx, starsPos);
+
+    drawTime(titleSkySmallCtx, frameCount);
 }
 
 function renderPixelArt() {
@@ -170,10 +191,11 @@ function renderPixelArt() {
     );
 }
 
-var frameCount = 0;
+let frameCount = 0;
+let FRAME_COUNT_MAX = 3600 * 10;
 
 function animate() {
-    drawPixelArt();
+    drawPixelArt(frameCount);
     renderPixelArt();
 
     shootingStars = updateShootingStars(shootingStars);
@@ -181,6 +203,8 @@ function animate() {
     requestAnimationFrame(animate);
 
     frameCount += 1;
+
+    if (frameCount >= FRAME_COUNT_MAX) frameCount = 0;
 }
 
 animate();
