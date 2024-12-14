@@ -23,7 +23,12 @@ const titleSkySmallCtx = titleSkySmall.getContext('2d');
 // Define dimensions
 const pixelWidth = 256; // Low resolution width
 const pixelHeight = 256; // Low resolution height
-const scale = 2; // Scale factor (pixel size)
+let vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+let vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+let scale = 2; // Scale factor (pixel size)
+if (vw < 512) {
+    scale = 1;
+}
 const lambda = 0.05; // unit is per frame
 const starPNG = new Image();
 starPNG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAcUlEQVQ4T9VSSQ7AIAgU///mWhigsSg2MelBEk/CbEBlXc2+KWtLP2zgcIDGBSdEcDq1u8pgGwC0zu7pm4pBiSjwpNEbB+P6FKjyu9TeF4Cgw6f081yn5AGIJLkFpXvl9kuIrmh7C72lw08ZZ2F+0rBv0UYsDzyQ6qkAAAAASUVORK5CYIIA';
